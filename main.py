@@ -195,7 +195,7 @@ class BMSHandler:
                             print("bms connected, sending request for overall data")
                             data = bytes([0xDD, 0xA5, 0x03, 0x00, 0xFF, 0xFD, 0x77])
                         else:
-                            print("bms connected, sending request for by cell data")
+                            print("bms connected, sending request for cell data")
                             data = bytes([0xDD, 0xA5, 0x04, 0x00, 0xFF, 0xFC, 0x77])
 
                         await client.write_gatt_char(BMS_TX_CHAR_UUID, data)
