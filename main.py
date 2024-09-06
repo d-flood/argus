@@ -1,4 +1,5 @@
 import asyncio
+import json
 import os
 import struct
 import time
@@ -16,6 +17,7 @@ class BMSHandler:
         self.bms_data_length_received = 0
         self.bms_data_length_expected = 0
         self.bms_data_error = False
+        self.all_data = {}
 
     def restart_bluetooth(self):
         print("Restarting Bluetooth service...")
@@ -54,6 +56,7 @@ class BMSHandler:
                 if self.get_is_checksum_valid_for_received_data(self.bms_data_received):
                     print("Checksums match")
                     self.print_bms_data_received(self.bms_data_received)
+                    print(json.dumps(self.all_data, indent=4))
                     # Reset the state
                     self.bms_data_received = []
                     self.bms_data_length_received = 0
@@ -97,65 +100,70 @@ class BMSHandler:
     def print_bms_data_received(self, data):
         if data[1] == 0x03:
             total_volts = struct.unpack(">H", bytes(data[4:6]))[0] / 100
-            print(f"Total Volts: {total_volts:.2f}V")
+            self.all_data["total_volts"] = f"{total_volts}V"
 
             current = struct.unpack(">H", bytes(data[6:8]))[0] / 100
-            print(f"Current: {current:.2f}A")
+            self.all_data["current"] = f"{current}A"
 
             remaining_capacity = struct.unpack(">H", bytes(data[8:10]))[0] / 100
-            print(f"Remaining Capacity: {remaining_capacity:.2f}Ah")
+            self.all_data["remaining_capacity"] = f"{remaining_capacity}Ah"
 
             nominal_capacity = struct.unpack(">H", bytes(data[10:12]))[0] / 100
-            print(f"Nominal Capacity: {nominal_capacity:.2f}Ah")
+            self.all_data["nominal_capacity"] = f"{nominal_capacity}Ah"
 
             total_cycles = struct.unpack(">H", bytes(data[12:14]))[0]
-            print(f"Total cycles: {total_cycles}")
+            self.all_data["total_cycles"] = total_cycles
 
             date = struct.unpack(">H", bytes(data[14:16]))[0]
-            print(
-                f"Production date YYYY/MM/DD: {2000 + (date >> 9):04d}/{(date >> 5) & 0x0F:02d}/{date & 0x1F:02d}"
+            self.all_data["production_date"] = (
+                f"{2000 + (date >> 9):04d}/{(date >> 5) & 0x0F:02d}/{date & 0x1F:02d}"
             )
 
             # Assuming cells balancing status is in bytes 16-19
+            self.all_data["balance_status"] = []
             for i in range(4):
                 balance_status = data[16 + i]
-                print(f"Balance status {i}: {balance_status:02X}")
+                self.all_data["balance_status"].append(balance_status)
 
             protection_status = struct.unpack(">H", bytes(data[20:22]))[0]
-            print(f"Protection status: {bin(protection_status)[2:].zfill(16)}")
+            self.all_data["protection_status"] = bin(protection_status)[2:].zfill(16)
 
             software_version = data[22] / 10
-            print(f"Software version: {software_version:.1f}")
+            self.all_data["software_version"] = software_version
 
             soc = data[23]
-            print(f"Remaining percent (SOC): {soc}%")
+            self.all_data["remaining_soc"] = f"{soc}%"
 
             mosfet_state_charge = "ON" if (data[24] & 0x01) == 1 else "OFF"
             mosfet_state_discharge = "ON" if (data[24] & 0x02) == 2 else "OFF"
-            print(
-                f"MOSFET state: charge {mosfet_state_charge}, discharge {mosfet_state_discharge}"
-            )
+
+            self.all_data["mosfet_state_charge"] = mosfet_state_charge
+            self.all_data["mosfet_state_discharge"] = mosfet_state_discharge
 
             bms_number_of_cells = data[25]
-            print(f"Number of battery strings: {bms_number_of_cells}")
+            self.all_data["number_of_battery_strings"] = bms_number_of_cells
 
             num_temp_sensors = data[26]
-            print(f"Number of temperature sensors: {num_temp_sensors}")
+            self.all_data["num_temp_sensors"] = num_temp_sensors
+            self.all_data["temp_sensors"] = []
             for i in range(num_temp_sensors):
                 temp = (
                     struct.unpack(">H", bytes(data[27 + 2 * i : 29 + 2 * i]))[0] - 2731
                 ) / 10
                 print(f"Temperature sensor {i + 1}: {temp:.1f}°C")
+                self.all_data["temp_sensors"].append(f"{temp:.1f}°C")
 
         elif data[1] == 0x04:
             bms_number_of_cells = data[3] // 2
+            self.all_data["number_of_cells"] = bms_number_of_cells
+            self.all_data["cell_voltages"] = []
             for i in range(bms_number_of_cells):
                 millivolts = struct.unpack(">H", bytes(data[4 + 2 * i : 6 + 2 * i]))[0]
-                print(f"Cell {i + 1}: {millivolts / 1000:.3f}V")
+                self.all_data["cell_voltages"].append(f"{millivolts / 1000:.3f}V")
 
         elif data[1] == 0xFC:
             if data[0] == 0xDD and data[2] == 0:
-                print("Heating command successfully sent")
+                self.all_data["heating_command"] = "success"
 
         # Add more data handlers as needed
 
