@@ -1,6 +1,7 @@
 import asyncio
 import os
 import struct
+import time
 from bleak import BleakClient, BleakScanner, BleakError
 
 # UUIDs for the XiaoXiang BMS
@@ -22,7 +23,6 @@ class BMSHandler:
         os.system("sudo hciconfig hci0 reset")
         print("Bluetooth service restarted.")
         # Optional: Wait for a few seconds to ensure the Bluetooth service has restarted
-        import time
 
         time.sleep(5)
 
@@ -110,13 +110,10 @@ class BMSHandler:
                 f"Production date YYYY/MM/DD: {2000 + (date >> 9):04d}/{(date >> 5) & 0x0F:02d}/{date & 0x1F:02d}"
             )
 
-            bms_number_of_cells = data[25]
-            for i in range(bms_number_of_cells):
-                b = data[16 + i // 8]
-                shift = 7 - (i % 8)
-                print(
-                    f"Cell {i + 1:2d} {'balancing' if (b >> shift) & 0x01 else 'not balancing'}"
-                )
+            # Assuming cells balancing status is in bytes 16-19
+            for i in range(4):
+                balance_status = data[16 + i]
+                print(f"Balance status {i}: {balance_status:02X}")
 
             protection_status = struct.unpack(">H", bytes(data[20:22]))[0]
             print(f"Protection status: {bin(protection_status)[2:].zfill(16)}")
@@ -143,13 +140,18 @@ class BMSHandler:
                     struct.unpack(">H", bytes(data[27 + 2 * i : 29 + 2 * i]))[0] - 2731
                 ) / 10
                 print(f"Temperature sensor {i + 1}: {temp:.1f}°C")
-            print()
 
         elif data[1] == 0x04:
             bms_number_of_cells = data[3] // 2
             for i in range(bms_number_of_cells):
                 millivolts = struct.unpack(">H", bytes(data[4 + 2 * i : 6 + 2 * i]))[0]
                 print(f"Cell {i + 1}: {millivolts / 1000:.3f}V")
+
+        elif data[1] == 0xFC:
+            if data[0] == 0xDD and data[2] == 0:
+                print("Heating command successfully sent")
+
+        # Add more data handlers as needed
 
     async def scan_and_connect(self):
         print("Scanning for devices...")
@@ -212,4 +214,9 @@ if __name__ == "__main__":
     handler = BMSHandler()
     handler.restart_bluetooth()
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(handler.main())
+    try:
+        loop.run_until_complete(handler.main())
+    except KeyboardInterrupt:
+        # turn off bluetooth
+        os.system("sudo hciconfig hci0 down")
+        print("\nBluetooth turned off.")
