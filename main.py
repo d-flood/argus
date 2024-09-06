@@ -37,6 +37,12 @@ class BMSHandler:
                 self.bms_data_length_expected = data[3]
                 if not self.bms_data_error:
                     self.bms_data_error = not self.append_bms_packet(data)
+                    if (
+                        self.bms_data_length_received >= 0x18
+                    ):  # Ensures there are enough bytes for the following fields
+                        chgot = struct.unpack(">H", bytes(data[0x18:0x1A]))[0]
+                        charge_overtemp = (chgot - 2731) / 10
+                        print(f"Charge Overtemp Threshold: {charge_overtemp:.1f}°C")
         else:
             self.bms_data_error = not self.append_bms_packet(data)
 
