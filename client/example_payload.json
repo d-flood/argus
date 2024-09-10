@@ -1,0 +1,28 @@
+{
+  "balance_status": [0, 0, 0, 0],
+  "cell_voltages": [
+    "3.477V",
+    "3.486V",
+    "3.484V",
+    "3.488V",
+    "3.465V",
+    "3.467V",
+    "3.459V",
+    "3.463V"
+  ],
+  "current": "0.0A",
+  "mosfet_state_charge": "ON",
+  "mosfet_state_discharge": "ON",
+  "nominal_capacity": "560.0Ah",
+  "num_temp_sensors": 2,
+  "number_of_battery_strings": 8,
+  "number_of_cells": 8,
+  "production_date": "2024/03/17",
+  "protection_status": "0000000000000000",
+  "remaining_capacity": "559.98Ah",
+  "remaining_soc": "100%",
+  "software_version": 2.2,
+  "temp_sensors": ["21.9\u00b0C", "21.4\u00b0C"],
+  "total_cycles": 0,
+  "total_volts": "27.78V"
+}

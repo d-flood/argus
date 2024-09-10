@@ -5,10 +5,15 @@ import struct
 import time
 from bleak import BleakClient, BleakScanner, BleakError
 
+from mureq import request
+
+
 # UUIDs for the XiaoXiang BMS
 BMS_SERVICE_UUID = "0000ff00-0000-1000-8000-00805f9b34fb"
 BMS_TX_CHAR_UUID = "0000ff02-0000-1000-8000-00805f9b34fb"
 BMS_RX_CHAR_UUID = "0000ff01-0000-1000-8000-00805f9b34fb"
+
+START_VOLTAGE_REGISTER = 0x2A
 
 
 class BMSHandler:
@@ -24,8 +29,6 @@ class BMSHandler:
         os.system("sudo systemctl restart bluetooth")
         os.system("sudo hciconfig hci0 reset")
         print("Bluetooth service restarted.")
-        # Optional: Wait for a few seconds to ensure the Bluetooth service has restarted
-
         time.sleep(5)
 
     def handle_notification(self, sender: int, data: bytearray):
@@ -39,9 +42,7 @@ class BMSHandler:
                 self.bms_data_length_expected = data[3]
                 if not self.bms_data_error:
                     self.bms_data_error = not self.append_bms_packet(data)
-                    if (
-                        self.bms_data_length_received >= 0x18
-                    ):  # Ensures there are enough bytes for the following fields
+                    if self.bms_data_length_received >= 0x18:
                         chgot = struct.unpack(">H", bytes(data[0x18:0x1A]))[0]
                         charge_overtemp = (chgot - 2731) / 10
                         print(f"Charge Overtemp Threshold: {charge_overtemp:.1f}°C")
@@ -56,7 +57,9 @@ class BMSHandler:
                 if self.get_is_checksum_valid_for_received_data(self.bms_data_received):
                     print("Checksums match")
                     self.print_bms_data_received(self.bms_data_received)
-                    print(json.dumps(self.all_data, indent=4))
+                    sorted_data = {k: self.all_data[k] for k in sorted(self.all_data)}
+                    print(json.dumps(sorted_data, indent=4))
+                    post_data(sorted_data)
                     # Reset the state
                     self.bms_data_received = []
                     self.bms_data_length_received = 0
@@ -165,7 +168,10 @@ class BMSHandler:
             if data[0] == 0xDD and data[2] == 0:
                 self.all_data["heating_command"] = "success"
 
-        # Add more data handlers as needed
+        elif data[1] == START_VOLTAGE_REGISTER:  # Handle start voltage response
+            if data[0] == 0xDD and data[2] == 0:
+                start_voltage = struct.unpack(">H", bytes(data[4:6]))[0]
+                self.all_data["start_voltage"] = f"{start_voltage / 1000:.3f}V"
 
     async def scan_and_connect(self):
         print("Scanning for devices...")
@@ -191,21 +197,31 @@ class BMSHandler:
 
         async with BleakClient(target_device) as client:
             try:
-                # Ensure connection
                 if not client.is_connected:
                     print("Failed to connect to the device.")
                     return
 
                 print("Connected to the BMS device")
-
-                # Enable notifications
                 await client.start_notify(BMS_RX_CHAR_UUID, self.handle_notification)
 
                 ticker = 1
                 while True:
                     print(f"Tick {ticker:03d}: ", end="")
                     if client.is_connected:
-                        if ticker % 2 == 0:
+                        if ticker % 3 == 0:
+                            print("bms connected, sending request for start voltage")
+                            data = bytes(
+                                [
+                                    0xDD,
+                                    0xA5,
+                                    0x03,
+                                    0x00,
+                                    0xFF,
+                                    START_VOLTAGE_REGISTER,
+                                    0x77,
+                                ]
+                            )
+                        elif ticker % 2 == 0:
                             print("bms connected, sending request for overall data")
                             data = bytes([0xDD, 0xA5, 0x03, 0x00, 0xFF, 0xFD, 0x77])
                         else:
@@ -224,6 +240,19 @@ class BMSHandler:
                 print(f"An error occurred: {e}")
 
 
+def get_token():
+    with open("argus_key", "r") as file:
+        return file.read().strip()
+
+
+def post_data(data: dict):
+    url = "http://argus.davidaflood.com/v1/bms_data/"
+    token = get_token()
+    headers = {"Authorization": token}
+    response = request("POST", url, headers=headers, json=data)
+    print(response.json())
+
+
 if __name__ == "__main__":
     handler = BMSHandler()
     handler.restart_bluetooth()
@@ -231,6 +260,5 @@ if __name__ == "__main__":
     try:
         loop.run_until_complete(handler.main())
     except KeyboardInterrupt:
-        # turn off bluetooth
         os.system("sudo hciconfig hci0 down")
         print("\nBluetooth turned off.")
