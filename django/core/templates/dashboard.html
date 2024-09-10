@@ -1,4 +1,153 @@
-{% extends 'base.html' %} {% block content %}
-<h1>Dashboard</h1>
-<p>Welcome to the dashboard!</p>
+{% extends 'base.html' %}
+{% block content %}
+
+<main class="container">
+    <h1 class="text-center">Dashboard</h1>
+    <article>
+        <h2 class="text-center">The Lodge</h2>
+        <div class="row">
+            <div class="col-md-6"></div>
+                <h3>Current</h3>
+                <dl>
+                    <div class="row">
+                        <div class="col-6">
+                            <dt class="fs-5">Charge</dt>
+                            <dd>
+                                <div class="progress rounded-start-4 rounded-end-4" style="height: 30px;">
+                                    <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 80%;" aria-valuenow="3.1" aria-valuemin="0" aria-valuemax="3.5">
+                                        <span class="progress-text fs-4 fw-bolder">3.1A</span>
+                                    </div>
+                                </div>
+                            </dd>
+                        </div>
+                        <div class="col-6">
+                            <dt class="fs-5">Discharge</dt>
+                            <dd>
+                                <div class="progress rounded-start-4 rounded-end-4" style="height: 30px;">
+                                    <div class="progress-bar bg-info progress-bar-striped progress-bar-animated" role="progressbar" style="width: 40%;" aria-valuenow="3.1" aria-valuemin="0" aria-valuemax="3.5">
+                                        <span class="progress-text fs-4 fw-bolder">1.1A</span>
+                                    </div>
+                                </div>
+                            </dd>
+                        </div>
+                    </div>
+                </dl>
+            </div>
+            <hr class="border border-3">
+            <div class="col-md-6">
+                <h3>Voltages</h3>
+                <dl>
+                    <dt class="fs-5">Total Voltage</dt>
+                    <dd>
+                        <div class="progress rounded-start-4 rounded-end-4" style="height: 30px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: 80%;" aria-valuenow="3.1" aria-valuemin="0" aria-valuemax="3.5">
+                                <span class="progress-text fs-4 fw-bolder">11.4v</span>
+                            </div>
+                        </div>
+                    </dd>
+                    <hr>
+                    <div class="row">
+                        <div class="col-6">
+                            <dt class="fs-5">Cell 1</dt>
+                            <dd>
+                                <div class="progress">
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: 80%;" aria-valuenow="3.1" aria-valuemin="0" aria-valuemax="3.5">
+                                        <span class="progress-text fs-6 fw-bolder">3.1v</span>
+                                    </div>
+                                </div>
+                            </dd>
+                            <dt class="fs-5">Cell 2</dt>
+                            <dd>
+                                <div class="progress">
+                                    <div class="progress-bar bg-warning" role="progressbar" style="width: 50%;" aria-valuenow="2.0" aria-valuemin="0" aria-valuemax="3.5">
+                                        <span class="progress-text fs-6 fw-bolder">2.0v</span>
+                                    </div>
+                                </div>
+                            </dd>
+                            <dt class="fs-5">Cell 3</dt>
+                            <dd>
+                                <div class="progress">
+                                    <div class="progress-bar bg-danger" role="progressbar" style="width: 30%;" aria-valuenow="1.1" aria-valuemin="0" aria-valuemax="3.5">
+                                        <span class="progress-text fs-6 fw-bolder">1.1v</span>
+                                    </div>
+                                </div>
+                            </dd>
+                            <dt class="fs-5">Cell 4</dt>
+                            <dd>
+                                <div class="progress">
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: 80%;" aria-valuenow="3.1" aria-valuemin="0" aria-valuemax="3.5">
+                                        <span class="progress-text fs-6 fw-bolder">3.1v</span>
+                                    </div>
+                                </div>
+                            </dd>
+                        </div>
+                        <div class="col-6">
+                            <dt class="fs-5">Cell 5</dt>
+                            <dd>
+                                <div class="progress">
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: 80%;" aria-valuenow="3.1" aria-valuemin="0" aria-valuemax="3.5">
+                                        <span class="progress-text fs-6 fw-bolder">3.1v</span>
+                                    </div>
+                                </div>
+                            </dd>
+                            <dt class="fs-5">Cell 6</dt>
+                            <dd>
+                                <div class="progress">
+                                    <div class="progress-bar bg-warning" role="progressbar" style="width: 50%;" aria-valuenow="2.0" aria-valuemin="0" aria-valuemax="3.5">
+                                        <span class="progress-text fs-6 fw-bolder">2.0v</span>
+                                    </div>
+                                </div>
+                            </dd>
+                            <dt class="fs-5">Cell 7</dt>
+                            <dd>
+                                <div class="progress">
+                                    <div class="progress-bar bg-danger" role="progressbar" style="width: 30%;" aria-valuenow="1.1" aria-valuemin="0" aria-valuemax="3.5">
+                                        <span class="progress-text fs-6 fw-bolder">1.1v</span>
+                                    </div>
+                                </div>
+                            </dd>
+                            <dt class="fs-5">Cell 8</dt>
+                            <dd>
+                                <div class="progress">
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: 80%;" aria-valuenow="3.1" aria-valuemin="0" aria-valuemax="3.5">
+                                        <span class="progress-text fs-6 fw-bolder">3.1v</span>
+                                    </div>
+                                </div>
+                            </dd>
+                        </div>
+                    </div>
+                </dl>
+            </div>
+            <hr class="border border-3">
+            <div class="col-md-6">
+                <h3>Temp Sensors</h3>
+                <dl>
+                    <div class="row">
+                        <div class="col-6">
+                            <dt class="fs-5">Temp 1</dt>
+                            <dd>
+                                <div class="progress">
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: 40%;" aria-valuenow="3.1" aria-valuemin="0" aria-valuemax="3.5">
+                                        <span class="progress-text fs-6 fw-bolder">18c</span>
+                                    </div>
+                                </div>
+                            </dd>
+                        </div>
+                        <div class="col-6">
+                            <dt class="fs-5">Temp 2</dt>
+                            <dd>
+                                <div class="progress">
+                                    <div class="progress-bar bg-warning" role="progressbar" style="width: 80%;" aria-valuenow="3.1" aria-valuemin="0" aria-valuemax="3.5">
+                                        <span class="progress-text fs-6 fw-bolder">40c</span>
+                                    </div>
+                                </div>
+                            </dd>
+                        </div>
+                    </div>
+                </dl>
+            </div>
+        </div>
+    </article>
+</main>
+
 {% endblock %}

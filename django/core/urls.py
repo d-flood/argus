@@ -20,11 +20,12 @@ from django.conf import settings
 from django.contrib import admin
 from django.urls import path
 
-from core.views import dashboard
+from core import views
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("", dashboard),
+    path("", views.home, name="home"),
+    path("dashboard/", views.dashboard, name="dashboard"),
 ]
 
 if settings.DEBUG:
