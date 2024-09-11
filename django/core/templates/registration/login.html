@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% block content %}
+
+<main class="container" style="max-width: 400px;">
+    <h2 class="text-center">Log In</h2>
+    {% if next %}
+        {% if user.is_authenticated %}
+        <p>Your account doesn't have access to this page. To proceed,
+        please login with an account that has access.</p>
+        {% else %}
+        <p>Please login to see this page.</p>
+        {% endif %}
+    {% endif %}
+    <form method="post">
+        {% csrf_token %}
+        {{ form|crispy }}
+        <div class="row">
+            <div class="col">
+                <button class="btn btn-primary w-100" type="submit">Log In</button>
+            </div>
+            <!-- <div class="col-6">
+                <a class="btn btn-secondary w-100" href="#">Forgot password?</a>
+            </div> -->
+      </div>
+    </form>
+</main>
+    
+{% endblock content %}

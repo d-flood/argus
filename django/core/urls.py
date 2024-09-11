@@ -18,12 +18,13 @@ Including another URLconf
 from django.conf.urls.static import static
 from django.conf import settings
 from django.contrib import admin
-from django.urls import path
+from django.urls import include, path
 
 from core import views
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("accounts/", include("django.contrib.auth.urls")),
     path("", views.home, name="home"),
     path("dashboard/", views.dashboard, name="dashboard"),
     path("v1/bms_data/", views.bms_data, name="bms_data"),
