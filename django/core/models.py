@@ -7,6 +7,7 @@ class BMSDevice(models.Model):
     )
     name = models.CharField(max_length=255)
     token = models.CharField(max_length=255)
+    polling_interval = models.IntegerField(default=60)
 
     class Meta:
         verbose_name = "BMS Devices"

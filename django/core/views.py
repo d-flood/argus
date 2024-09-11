@@ -21,20 +21,22 @@ def dashboard(request: HttpRequest) -> HttpResponse:
 @csrf_exempt
 @require_POST
 def bms_data(request: HttpRequest) -> HttpResponse:
-    print("____________________")
     token = request.headers.get("Authorization")
     if not token:
         return HttpResponse(status=401)
     try:
         bms = models.BMSDevice.objects.get(token=token)
     except models.BMSDevice.DoesNotExist:
-        return HttpResponse(status=401)
+        return HttpResponse(status=404)
     data = json.loads(request.body)
-    print(request.body)
     if not isinstance(data, dict):
-        print(type(data))
         return HttpResponse(status=400)
     dataset = models.Dataset(bms=bms, data=data)
     dataset.save()
-    response_data = {"id": dataset.pk, "message": "Data saved successfully"}
+    response_data = {
+        "id": dataset.pk,
+        "message": "Data saved successfully",
+        "time": dataset.date,
+        "polling_interval": bms.polling_interval,
+    }
     return HttpResponse(json.dumps(response_data), content_type="application/json")

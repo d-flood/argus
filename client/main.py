@@ -22,6 +22,7 @@ class BMSHandler:
         self.bms_data_length_received = 0
         self.bms_data_length_expected = 0
         self.bms_data_error = False
+        self.polling_interval = 60
         self.all_data = {}
 
     def restart_bluetooth(self):
@@ -59,7 +60,7 @@ class BMSHandler:
                     self.print_bms_data_received(self.bms_data_received)
                     sorted_data = {k: self.all_data[k] for k in sorted(self.all_data)}
                     print(json.dumps(sorted_data, indent=4))
-                    post_data(sorted_data)
+                    self.polling_interval = post_data(sorted_data)
                     # Reset the state
                     self.bms_data_received = []
                     self.bms_data_length_received = 0
@@ -234,7 +235,7 @@ class BMSHandler:
                         break
 
                     ticker += 1
-                    await asyncio.sleep(5)
+                    await asyncio.sleep(self.polling_interval)
 
             except BleakError as e:
                 print(f"An error occurred: {e}")
@@ -250,7 +251,12 @@ def post_data(data: dict):
     token = get_token()
     headers = {"Authorization": token}
     response = request("POST", url, headers=headers, json=data)
-    print(response.json())
+    if response.status_code == 200:
+        resp_data = response.json()
+        print(resp_data)
+        if polling_interval := resp_data.get("polling_interval"):
+            return polling_interval
+    return 60
 
 
 if __name__ == "__main__":
