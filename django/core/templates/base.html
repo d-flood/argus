@@ -35,25 +35,29 @@
                         <a class="nav-link" href="{% url 'home' %}">Home</a>
                     {% endif %}
                 </li>
-                <li class="nav-item dropdown">
-                    {% if request.resolver_match.url_name == 'dashboard' %}
-                        <a class="nav-link active dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button"
-                            aria-haspopup="true" aria-expanded="false">
-                            Dashboards
-                            <span class="visually-hidden">(current)</span>
-                        </a>
-                    {% else %}
-                        <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button"
-                            aria-haspopup="true" aria-expanded="false">
-                            Dashboards
-                        </a>
-                    {% endif %}
-                    <div class="dropdown-menu">
-                        <a class="dropdown-item" href="{% url 'dashboard' %}">Lodge BMS</a>
-                        <div class="dropdown-divider"></div>
-                        <a class="dropdown-item" href="#">Separated link</a>
-                    </div>
-                </li>
+                {% if request.user.is_authenticated %}
+                    <li class="nav-item dropdown">
+                        {% if request.resolver_match.url_name == 'dashboard' %}
+                            <a class="nav-link active dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button"
+                                aria-haspopup="true" aria-expanded="false">
+                                Dashboards
+                                <span class="visually-hidden">(current)</span>
+                            </a>
+                        {% else %}
+                            <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button"
+                                aria-haspopup="true" aria-expanded="false">
+                                Dashboards
+                            </a>
+                        {% endif %}
+                        <div class="dropdown-menu">
+                            {% for bms in request.user.bms_devices.all %}
+                                <a class="dropdown-item" href="{% url 'dashboard' bms_device_pk=bms.pk %}">{{ bms.name }}</a>
+                            {% endfor %}
+                            <!-- <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="#">Separated link</a> -->
+                        </div>
+                    </li>
+                {% endif %}
             </ul>
             <ul class="navbar-nav">
                 <li class="nav-item">

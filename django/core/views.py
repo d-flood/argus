@@ -1,11 +1,12 @@
 import json
 
 from django.http import HttpRequest, HttpResponse
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_safe, require_POST
 
 from core import models
+from core.utilities import prepare_bms_data_context
 
 
 @require_safe
@@ -14,8 +15,15 @@ def home(request: HttpRequest) -> HttpResponse:
 
 
 @require_safe
-def dashboard(request: HttpRequest) -> HttpResponse:
-    return render(request, "dashboard.html")
+def dashboard(request: HttpRequest, bms_device_pk: int) -> HttpResponse:
+    bms = get_object_or_404(models.BMSDevice, pk=bms_device_pk)
+    bms_data = bms.datasets.first()
+    bms_data = prepare_bms_data_context(bms_data.data)
+    context = {
+        "data": bms_data,
+        "bms_data": bms,
+    }
+    return render(request, "dashboard.html", context)
 
 
 @csrf_exempt
@@ -36,7 +44,6 @@ def bms_data(request: HttpRequest) -> HttpResponse:
     response_data = {
         "id": dataset.pk,
         "message": "Data saved successfully",
-        "time": dataset.date,
         "polling_interval": bms.polling_interval,
     }
     return HttpResponse(json.dumps(response_data), content_type="application/json")

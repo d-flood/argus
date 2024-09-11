@@ -61,6 +61,8 @@ class BMSHandler:
                     sorted_data = {k: self.all_data[k] for k in sorted(self.all_data)}
                     print(json.dumps(sorted_data, indent=4))
                     self.polling_interval = post_data(sorted_data)
+                    print(f"Polling interval set to {self.polling_interval} seconds")
+                    time.sleep(self.polling_interval)
                     # Reset the state
                     self.bms_data_received = []
                     self.bms_data_length_received = 0
@@ -104,7 +106,7 @@ class BMSHandler:
     def print_bms_data_received(self, data):
         if data[1] == 0x03:
             total_volts = struct.unpack(">H", bytes(data[4:6]))[0] / 100
-            self.all_data["total_volts"] = f"{total_volts}V"
+            self.all_data["total_volts"] = f"{total_volts}"
 
             current = struct.unpack(">H", bytes(data[6:8]))[0] / 100
             self.all_data["current"] = f"{current}A"
@@ -155,7 +157,7 @@ class BMSHandler:
                     struct.unpack(">H", bytes(data[27 + 2 * i : 29 + 2 * i]))[0] - 2731
                 ) / 10
                 print(f"Temperature sensor {i + 1}: {temp:.1f}°C")
-                self.all_data["temp_sensors"].append(f"{temp:.1f}°C")
+                self.all_data["temp_sensors"].append(f"{temp:.1f}")
 
         elif data[1] == 0x04:
             bms_number_of_cells = data[3] // 2
@@ -163,7 +165,7 @@ class BMSHandler:
             self.all_data["cell_voltages"] = []
             for i in range(bms_number_of_cells):
                 millivolts = struct.unpack(">H", bytes(data[4 + 2 * i : 6 + 2 * i]))[0]
-                self.all_data["cell_voltages"].append(f"{millivolts / 1000:.3f}V")
+                self.all_data["cell_voltages"].append(f"{millivolts / 1000:.3f}")
 
         elif data[1] == 0xFC:
             if data[0] == 0xDD and data[2] == 0:
@@ -235,7 +237,7 @@ class BMSHandler:
                         break
 
                     ticker += 1
-                    await asyncio.sleep(self.polling_interval)
+                    await asyncio.sleep(5)
 
             except BleakError as e:
                 print(f"An error occurred: {e}")
@@ -247,6 +249,7 @@ def get_token():
 
 
 def post_data(data: dict):
+    print("Posting data to Argus...")
     url = "http://argus.davidaflood.com/v1/bms_data/"
     token = get_token()
     headers = {"Authorization": token}

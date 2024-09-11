@@ -24,10 +24,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-y5ylne-j5!8r%g4u0ymy*p9ybo1n$-0@q6ib)k=1ei=t4h8$!_"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv("DEBUG", "False") == "True"
+DEBUG = os.getenv("DJANGO_DEBUG", "False") == "True"
 
 ALLOWED_HOSTS = [
     "*",
+    "http://localhost:8000",
+    "http://localhost:8001",
+    "https://argus.davidaflood.com",
+]
+
+CSRF_TRUSTED_ORIGINS = [
     "http://localhost:8000",
     "http://localhost:8001",
     "https://argus.davidaflood.com",

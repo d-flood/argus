@@ -26,5 +26,8 @@ class Dataset(models.Model):
     data = models.JSONField()
     date = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        ordering = ["-date"]
+
     def __str__(self):
         return f"{self.bms.name} - {self.date}"

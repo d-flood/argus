@@ -1,0 +1,11 @@
+services:
+  django:
+    image: damascus.flicker-lionfish.ts.net/argus:latest
+    build: .
+    command: gunicorn core.wsgi:application --bind 0.0.0.0:8001 --access-logfile - --error-logfile -
+    volumes:
+      - ./db.sqlite3:/app/db.sqlite3
+    ports:
+      - "8001:8001"
+    environment:
+      DJANGO_DEBUG: "True"
