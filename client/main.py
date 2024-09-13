@@ -60,7 +60,7 @@ class BMSHandler:
                     sorted_data = {k: self.all_data[k] for k in sorted(self.all_data)}
                     print(json.dumps(sorted_data, indent=4))
                     self.polling_interval = post_data(sorted_data)
-                    print(f"Polling interval set to {self.polling_interval} minutes")
+                    print(f"Polling interval set to {self.polling_interval} seconds")
                     time.sleep(self.polling_interval)
                     # Reset the state
                     self.bms_data_received = []
