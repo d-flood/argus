@@ -1,6 +1,23 @@
 def prepare_bms_data_context(data: dict):
-    if not data.get("current") or data.get("current") == "0.0A":
-        data["current"] = 0
+    if not data.get("current"):
+        data["current"] = "Unknown"
+        data["current_class"] = "bg-secondary"
+    else:
+        if data["current"] == "0.0":
+            data["current_class"] = "bg-secondary"
+            data["current_label"] = "No current"
+        elif int(data["current"]) > 0:  # charging
+            data["current_label"] = "Charging"
+            data["current_class"] = (
+                "progress-bar-striped progress-bar-animated bg-success"
+            )
+        else:  # discharging
+            data["current_label"] = "Discharging"
+            data["current_class"] = (
+                "progress-bar-striped progress-bar-animated bg-warning"
+            )
+        data["current"] = f"{data['current']}A"
+
     # get percentage of 24 total volts is
     if not data.get("total_volts"):
         data["total_volts"] = None

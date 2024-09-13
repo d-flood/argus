@@ -36,10 +36,11 @@ def bms_data(request: HttpRequest) -> HttpResponse:
         bms = models.BMSDevice.objects.get(token=token)
     except models.BMSDevice.DoesNotExist:
         return HttpResponse(status=404)
+    user = bms.created_by
     data = json.loads(request.body)
     if not isinstance(data, dict):
         return HttpResponse(status=400)
-    dataset = models.Dataset(bms=bms, data=data)
+    dataset = models.Dataset(bms=bms, data=data, created_by=user)
     dataset.save()
     response_data = {
         "id": dataset.pk,
