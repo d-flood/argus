@@ -7,7 +7,6 @@ from bleak import BleakClient, BleakScanner, BleakError
 
 from mureq import request
 
-
 # UUIDs for the XiaoXiang BMS
 BMS_SERVICE_UUID = "0000ff00-0000-1000-8000-00805f9b34fb"
 BMS_TX_CHAR_UUID = "0000ff02-0000-1000-8000-00805f9b34fb"
@@ -108,8 +107,8 @@ class BMSHandler:
             total_volts = struct.unpack(">H", bytes(data[4:6]))[0] / 100
             self.all_data["total_volts"] = f"{total_volts}"
 
-            current = struct.unpack(">H", bytes(data[6:8]))[0] / 100
-            self.all_data["current"] = f"{current}A"
+            current = struct.unpack(">h", bytes(data[6:8]))[0] / 100
+            self.all_data["current"] = f"{current}"
 
             remaining_capacity = struct.unpack(">H", bytes(data[8:10]))[0] / 100
             self.all_data["remaining_capacity"] = f"{remaining_capacity}Ah"
@@ -125,7 +124,6 @@ class BMSHandler:
                 f"{2000 + (date >> 9):04d}/{(date >> 5) & 0x0F:02d}/{date & 0x1F:02d}"
             )
 
-            # Assuming cells balancing status is in bytes 16-19
             self.all_data["balance_status"] = []
             for i in range(4):
                 balance_status = data[16 + i]
@@ -135,7 +133,7 @@ class BMSHandler:
             self.all_data["protection_status"] = bin(protection_status)[2:].zfill(16)
 
             software_version = data[22] / 10
-            self.all_data["software_version"] = software_version
+            self.all_data["software_version"] = f"{software_version:.1f}"
 
             soc = data[23]
             self.all_data["remaining_soc"] = f"{soc}%"
