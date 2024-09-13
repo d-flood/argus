@@ -42,7 +42,7 @@ class OwnerAdmin(admin.ModelAdmin):
 
 
 class DatasetAdmin(OwnerAdmin):
-    # readonly_fields = ("created_by", "data", "bms")
+    readonly_fields = ("created_by", "data", "bms")
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "bms":
