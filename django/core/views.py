@@ -18,10 +18,12 @@ def home(request: HttpRequest) -> HttpResponse:
 def dashboard(request: HttpRequest, bms_device_pk: int) -> HttpResponse:
     bms = get_object_or_404(models.BMSDevice, pk=bms_device_pk)
     bms_data = bms.datasets.first()
+    date = bms_data.date if bms_data else None
     bms_data = prepare_bms_data_context(bms_data.data)
     context = {
         "data": bms_data,
-        "bms_data": bms,
+        "bms": bms,
+        "date": date,
     }
     return render(request, "dashboard.html", context)
 
