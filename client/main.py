@@ -6,6 +6,7 @@ import time
 from bleak import BleakClient, BleakScanner, BleakError
 
 from mureq import request
+from argus_logger import logging
 
 # UUIDs for the XiaoXiang BMS
 BMS_SERVICE_UUID = "0000ff00-0000-1000-8000-00805f9b34fb"
@@ -25,10 +26,10 @@ class BMSHandler:
         self.all_data = {}
 
     def restart_bluetooth(self):
-        print("Restarting Bluetooth service...")
+        logging.info("Restarting Bluetooth service...")
         os.system("sudo systemctl restart bluetooth")
         os.system("sudo hciconfig hci0 reset")
-        print("Bluetooth service restarted.")
+        logging.info("Bluetooth service restarted.")
         time.sleep(5)
 
     def handle_notification(self, sender: int, data: bytearray):
@@ -45,22 +46,26 @@ class BMSHandler:
                     if self.bms_data_length_received >= 0x18:
                         chgot = struct.unpack(">H", bytes(data[0x18:0x1A]))[0]
                         charge_overtemp = (chgot - 2731) / 10
-                        print(f"Charge Overtemp Threshold: {charge_overtemp:.1f}°C")
+                        logging.info(
+                            f"Charge Overtemp Threshold: {charge_overtemp:.1f}°C"
+                        )
         else:
             self.bms_data_error = not self.append_bms_packet(data)
 
         if not self.bms_data_error:
             if self.bms_data_length_received == self.bms_data_length_expected + 7:
-                print("Complete packet received, now must validate checksum")
+                logging.info("Complete packet received, now must validate checksum")
                 self.print_hex(self.bms_data_received, self.bms_data_length_received)
 
                 if self.get_is_checksum_valid_for_received_data(self.bms_data_received):
-                    print("Checksums match")
+                    logging.info("Checksums match")
                     self.print_bms_data_received(self.bms_data_received)
                     sorted_data = {k: self.all_data[k] for k in sorted(self.all_data)}
-                    print(json.dumps(sorted_data, indent=4))
+                    logging.info(json.dumps(sorted_data, indent=4))
                     self.polling_interval = post_data(sorted_data)
-                    print(f"Polling interval set to {self.polling_interval} seconds")
+                    logging.info(
+                        f"Polling interval set to {self.polling_interval} seconds"
+                    )
                     time.sleep(self.polling_interval)
                     # Reset the state
                     self.bms_data_received = []
@@ -71,7 +76,7 @@ class BMSHandler:
                     checksum = self.get_checksum_for_received_data(
                         self.bms_data_received
                     )
-                    print(
+                    logging.error(
                         f"Checksum error: received is 0x{checksum:04X}, calculated is 0x{256 * self.bms_data_received[self.bms_data_length_expected + 4] + self.bms_data_received[self.bms_data_length_expected + 5]:04X}"
                     )
 
@@ -96,11 +101,11 @@ class BMSHandler:
     def print_hex(data, datalen, reverse=False):
         for i in range(datalen):
             idx = datalen - i - 1 if reverse else i
-            print(f"{idx:2d} {' ' if i < datalen - 1 else ''}", end="")
-        print()
+            logging.debug(f"{idx:2d} {' ' if i < datalen - 1 else ''}", end="")
+        logging.debug("")
         for i in range(datalen):
             idx = datalen - i - 1 if reverse else i
-            print(f"{data[idx]:02X} {' ' if i < datalen - 1 else ''}")
+            logging.debug(f"{data[idx]:02X} {' ' if i < datalen - 1 else ''}")
 
     def print_bms_data_received(self, data):
         if data[1] == 0x03:
@@ -154,7 +159,7 @@ class BMSHandler:
                 temp = (
                     struct.unpack(">H", bytes(data[27 + 2 * i : 29 + 2 * i]))[0] - 2731
                 ) / 10
-                print(f"Temperature sensor {i + 1}: {temp:.1f}°C")
+                logging.info(f"Temperature sensor {i + 1}: {temp:.1f}°C")
                 self.all_data["temp_sensors"].append(f"{temp:.1f}")
 
         elif data[1] == 0x04:
@@ -175,20 +180,20 @@ class BMSHandler:
                 self.all_data["start_voltage"] = f"{start_voltage / 1000:.3f}V"
 
     async def scan_and_connect(self):
-        print("Scanning for devices...")
+        logging.info("Scanning for devices...")
         devices = await BleakScanner.discover()
         target_device = None
 
         for device in devices:
             if "xiaoxi" in device.name.lower():
                 target_device = device
-                break
 
         if not target_device:
-            print("No BMS device found.")
+            logging.warning("No BMS devices found.")
             return None
 
-        print(f"Found BMS device: {target_device.address}")
+        logging.info(f"Found BMS device(s): {target_device.name}")
+
         return target_device
 
     async def main(self):
@@ -199,18 +204,20 @@ class BMSHandler:
         async with BleakClient(target_device) as client:
             try:
                 if not client.is_connected:
-                    print("Failed to connect to the device.")
+                    logging.error("Failed to connect to the device.")
                     return
 
-                print("Connected to the BMS device")
+                logging.info("Connected to the BMS device")
                 await client.start_notify(BMS_RX_CHAR_UUID, self.handle_notification)
 
                 ticker = 1
                 while True:
-                    print(f"Tick {ticker:03d}: ", end="")
+                    logging.info(f"Tick {ticker:03d}: ")
                     if client.is_connected:
                         if ticker % 3 == 0:
-                            print("bms connected, sending request for start voltage")
+                            logging.info(
+                                "bms connected, sending request for start voltage"
+                            )
                             data = bytes(
                                 [
                                     0xDD,
@@ -223,22 +230,24 @@ class BMSHandler:
                                 ]
                             )
                         elif ticker % 2 == 0:
-                            print("bms connected, sending request for overall data")
+                            logging.info(
+                                "bms connected, sending request for overall data"
+                            )
                             data = bytes([0xDD, 0xA5, 0x03, 0x00, 0xFF, 0xFD, 0x77])
                         else:
-                            print("bms connected, sending request for cell data")
+                            logging.info("bms connected, sending request for cell data")
                             data = bytes([0xDD, 0xA5, 0x04, 0x00, 0xFF, 0xFC, 0x77])
 
                         await client.write_gatt_char(BMS_TX_CHAR_UUID, data)
                     else:
-                        print("Device disconnected")
+                        logging.warning("Device disconnected")
                         break
 
                     ticker += 1
                     await asyncio.sleep(5)
 
             except BleakError as e:
-                print(f"An error occurred: {e}")
+                logging.error(f"An error occurred: {e}")
 
 
 def get_token():
@@ -247,7 +256,7 @@ def get_token():
 
 
 def post_data(data: dict):
-    print("Posting data to Argus...")
+    logging.info("Posting data to Argus...")
     url = "http://argus.davidaflood.com/v1/bms_data/"
     token = get_token()
     headers = {"Authorization": token}
@@ -267,4 +276,4 @@ if __name__ == "__main__":
         loop.run_until_complete(handler.main())
     except KeyboardInterrupt:
         os.system("sudo hciconfig hci0 down")
-        print("\nBluetooth turned off.")
+        logging.info("\nBluetooth turned off.")
