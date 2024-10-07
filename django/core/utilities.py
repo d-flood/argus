@@ -6,7 +6,7 @@ def prepare_bms_data_context(data: dict):
         if data["current"] == "0.0":
             data["current_class"] = "bg-secondary"
             data["current_label"] = "No current"
-        elif int(data["current"]) > 0:  # charging
+        elif float(data.get("current", 0)) > 0:  # charging
             data["current_label"] = "Charging"
             data["current_class"] = (
                 "progress-bar-striped progress-bar-animated bg-success"
@@ -56,7 +56,7 @@ def prepare_bms_data_context(data: dict):
         data["cell_voltages_a"] = cells[:4]
         data["cell_voltages_b"] = cells[4:]
     temps = []
-    for i, temp in enumerate(data["temp_sensors"]):
+    for i, temp in enumerate(data.get("temp_sensors", []), 1):
         temp = float(temp)
         if temp > 40:
             temp_class = "bg-danger"
