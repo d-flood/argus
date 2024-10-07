@@ -1,0 +1,38 @@
+{
+  "devices": [
+    {
+      "address": "A4:C1:37:33:FD:55",
+      "name": "xiaoxiang BMS V8.4",
+      "total_volts": "26.6",
+      "current": "-0.32",
+      "remaining_capacity": "554.79Ah",
+      "nominal_capacity": "560.0Ah",
+      "total_cycles": 0,
+      "production_date": "2024/03/17",
+      "balance_status": [0, 0, 0, 0],
+      "protection_status": "0000000000000000",
+      "software_version": "2.2",
+      "remaining_soc": "99%",
+      "mosfet_state_charge": "ON",
+      "mosfet_state_discharge": "ON",
+      "number_of_battery_strings": 8,
+      "num_temp_sensors": 2,
+      "temp_sensors": ["21.3", "21.0"]
+    },
+    {
+      "address": "A4:C1:38:C4:B0:F6",
+      "name": "xiaoxiang BMS",
+      "number_of_cells": 8,
+      "cell_voltages": [
+        "3.323",
+        "3.324",
+        "3.323",
+        "3.325",
+        "3.323",
+        "3.325",
+        "3.326",
+        "3.323"
+      ]
+    }
+  ]
+}
