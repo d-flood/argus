@@ -230,7 +230,7 @@ class BMSHandler:
         return target_devices
 
     async def process_device(self, device):
-        async with BleakClient(device) as client:
+        async with BleakClient(device.address) as client:
             try:
                 if not client.is_connected:
                     logging.error(f"Failed to connect to the device {device.address}.")
