@@ -27,6 +27,7 @@ urlpatterns = [
     path("accounts/", include("django.contrib.auth.urls")),
     path("", views.home, name="home"),
     path("dashboard/<int:bms_device_pk>/", views.dashboard, name="dashboard"),
+    path("dashboard/<int:bms_device_pk>/chart/", views.chart, name="chart"),
     path("v1/bms_data/", views.bms_data, name="bms_data"),
 ]
 

@@ -4,9 +4,11 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_safe, require_POST
+from django.contrib.auth.decorators import login_required
 
 from core import models
 from core.utilities import prepare_bms_data_context
+from core.serializers import serialize_datasets
 
 
 @require_safe
@@ -48,3 +50,13 @@ def bms_data(request: HttpRequest) -> HttpResponse:
         "polling_interval": bms.polling_interval,
     }
     return HttpResponse(json.dumps(response_data), content_type="application/json")
+
+
+@require_safe
+@login_required
+def chart(request: HttpRequest, bms_device_pk: int) -> HttpResponse:
+    datasets = models.Dataset.objects.filter(
+        created_by=request.user, bms__pk=bms_device_pk
+    )
+    context = {"data": serialize_datasets(datasets)}
+    return render(request, "chart.html", context)

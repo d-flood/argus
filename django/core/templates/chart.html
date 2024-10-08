@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+{% load tz %}
+{% block content %}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"
+    integrity="sha512-CQBWl4fJHWbryGE+Pc7UAxWMUMNMWzWxF4SQo9CgkJIN1kx6djDQZjh3Y8SZ1d+6I+1zze6Z7kHXO7q3UyZAWw=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script
+    src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+
+<div class="container my-4">
+    <canvas id="currentChart"></canvas>
+</div>
+
+<div class="container my-4">
+    <canvas id="voltageChart"></canvas>
+</div>
+
+<script type="json" id="bms-data">
+{{ data|safe }}
+</script>
+
+<script>
+    const data = JSON.parse(document.getElementById('bms-data').textContent);
+
+    // Extract unique device names
+    const deviceNames = [...new Set(data.flatMap(entry => entry.data.devices.map(device => device.name)))];
+
+    const colors = [
+        '#3a9ed3', // Color for Device 1
+        '#7db229',  // Color for Device 2
+        '#ff6384',  // Color for Device 3
+        '#ff9f40'  // Additional colors if needed
+    ];
+
+    // Datasets for current
+    const currentDatasets = deviceNames.map((deviceName, index) => ({
+        label: `${deviceName} Current`,
+        data: data.map(entry => {
+            const device = entry.data.devices.find(d => d.name === deviceName);
+            return {
+                x: new Date(entry.date),
+                y: device ? parseFloat(device.current) : null
+            };
+        }),
+        borderColor: colors[index],
+        tension: 0.1
+    }));
+
+    const ctxCurrent = document.getElementById('currentChart').getContext('2d');
+
+    const currentChart = new Chart(ctxCurrent, {
+        type: 'line',
+        data: {
+            datasets: currentDatasets
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: {
+                    type: 'time',
+                    time: {
+                        unit: 'hour'
+                    },
+                    title: {
+                        display: true,
+                        text: 'Time of Day'
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Current (A)'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: true
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false
+                },
+                zoom: {
+                    zoom: {
+                        enabled: true,
+                        mode: 'x'
+                    },
+                    pan: {
+                        enabled: true,
+                        mode: 'x'
+                    }
+                }
+            }
+        }
+    });
+
+    // Datasets for total volts
+    const voltageDatasets = deviceNames.map((deviceName, index) => ({
+        label: `${deviceName} Voltage`,
+        data: data.map(entry => {
+            const device = entry.data.devices.find(d => d.name === deviceName);
+            return {
+                x: new Date(entry.date),
+                y: device ? parseFloat(device.total_volts) : null
+            };
+        }),
+        borderColor: colors[index],
+        tension: 0.1
+    }));
+
+    const ctxVoltage = document.getElementById('voltageChart').getContext('2d');
+
+    const voltageChart = new Chart(ctxVoltage, {
+        type: 'line',
+        data: {
+            datasets: voltageDatasets
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: {
+                    type: 'time',
+                    time: {
+                        unit: 'hour'
+                    },
+                    title: {
+                        display: true,
+                        text: 'Time of Day'
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Total Voltage (V)'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: true
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false
+                },
+                zoom: {
+                    zoom: {
+                        enabled: true,
+                        mode: 'x'
+                    },
+                    pan: {
+                        enabled: true,
+                        mode: 'x'
+                    }
+                }
+            }
+        }
+    });
+</script>
+
+{% endblock content %}
