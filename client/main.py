@@ -13,6 +13,21 @@ BMS_RX_CHAR_UUID = "0000ff01-0000-1000-8000-00805f9b34fb"
 
 START_VOLTAGE_REGISTER = 0x2A
 
+REQUESTS = [
+    (
+        "bms connected, sending request for start voltage",
+        bytes([0xDD, 0xA5, 0x03, 0x00, 0xFF, START_VOLTAGE_REGISTER, 0x77]),
+    ),
+    (
+        "bms connected, sending request for overall data",
+        bytes([0xDD, 0xA5, 0x03, 0x00, 0xFF, 0xFD, 0x77]),
+    ),
+    (
+        "bms connected, sending request for cell data",
+        bytes([0xDD, 0xA5, 0x04, 0x00, 0xFF, 0xFC, 0x77]),
+    ),
+]
+
 
 class BMSHandler:
     def __init__(self):
@@ -234,45 +249,14 @@ class BMSHandler:
                     ),
                 )
 
-                # Use ticker or similar mechanism to cycle requests
-                ticker = 1
-                while ticker <= 12:
-                    logging.info(f"Tick {ticker} for {device.address}: ")
+                for message, data in REQUESTS:
+                    logging.info(message)
                     if client.is_connected:
-                        # Sending requests similar to the old version
-                        if ticker % 3 == 0:
-                            logging.info(
-                                f"Sending request for start voltage to {device.address}"
-                            )
-                            data = bytes(
-                                [
-                                    0xDD,
-                                    0xA5,
-                                    0x03,
-                                    0x00,
-                                    0xFF,
-                                    START_VOLTAGE_REGISTER,
-                                    0x77,
-                                ]
-                            )
-                        elif ticker % 2 == 0:
-                            logging.info(
-                                f"Sending request for overall data to {device.address}"
-                            )
-                            data = bytes([0xDD, 0xA5, 0x03, 0x00, 0xFF, 0xFD, 0x77])
-                        else:
-                            logging.info(
-                                f"Sending request for cell data to {device.address}"
-                            )
-                            data = bytes([0xDD, 0xA5, 0x04, 0x00, 0xFF, 0xFC, 0x77])
-
                         await client.write_gatt_char(BMS_TX_CHAR_UUID, data)
                     else:
-                        logging.warning(f"Device {device.address} disconnected.")
+                        logging.warning("Device disconnected")
                         break
-
-                    ticker += 1
-                    await asyncio.sleep(5)
+                    await asyncio.sleep(10)
 
             except BleakError as e:
                 logging.error(f"An error occurred with device {device.address}: {e}")
