@@ -58,5 +58,8 @@ def chart(request: HttpRequest, bms_device_pk: int) -> HttpResponse:
     datasets = models.Dataset.objects.filter(
         created_by=request.user, bms__pk=bms_device_pk
     )
-    context = {"data": serialize_datasets(datasets)}
+    context = {
+        "data": serialize_datasets(datasets),
+        "bms_device_pk": bms_device_pk,
+    }
     return render(request, "chart.html", context)
