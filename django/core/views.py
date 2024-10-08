@@ -18,13 +18,11 @@ def home(request: HttpRequest) -> HttpResponse:
 def dashboard(request: HttpRequest, bms_device_pk: int) -> HttpResponse:
     bms = get_object_or_404(models.BMSDevice, pk=bms_device_pk)
     bms_data = bms.datasets.first()
-    date = bms_data.date if bms_data else None
-    bms_data = prepare_bms_data_context(bms_data.data)
-    context = {
-        "data": bms_data,
-        "bms": bms,
-        "date": date,
-    }
+    devices = [
+        prepare_bms_data_context(device) for device in bms_data.data.get("devices", [])
+    ]
+    devices = sorted(devices, key=lambda x: x["address"])
+    context = {"devices": devices, "bms": bms, "date": bms_data.date}
     return render(request, "dashboard.html", context)
 
 
