@@ -1,0 +1,82 @@
+<div class="row">
+    <div class="col-md-6">
+        <h3>Net Current</h3>
+        <dl>
+            <dt class="fs-5">{{ device.current_label }}</dt>
+            <dd>
+                <div class="progress rounded-start-4 rounded-end-4" style="height: 30px;">
+                    <div class="progress-bar {{ device.current_class }}" role="progressbar" style="width: 100%;" aria-valuenow="{{ device.current }}" aria-valuemin="0" aria-valuemax="?">
+                        <span class="progress-text fs-4 fw-bolder">{{ device.current }}</span>
+                    </div>
+                </div>
+            </dd> 
+        </dl>
+    </div>
+    <hr class="border border-3">
+    <div class="col-md-6">
+        <h3>Voltages</h3>
+        <dl>
+            <dt class="fs-5">Total Voltage</dt>
+            {% if device.total_volts %}
+                <dd>
+                    <div class="progress rounded-start-4 rounded-end-4" style="height: 30px;">
+                        <div class="progress-bar {{ device.total_volts_class }}" role="progressbar" style="width: {{ device.total_volts_percentage }}%;" aria-valuenow="{{ device.total_volts }}" aria-valuemin="0" aria-valuemax="24">
+                            <span class="progress-text fs-4 fw-bolder">{{ device.total_volts }}v</span>
+                        </div>
+                    </div>
+                </dd>
+            {% endif %}
+            <hr>
+            <div class="row">
+                <div class="col-6">
+                    {% if device.cell_voltages %}
+                        {% for cell in device.cell_voltages_a %}
+                            <dt class="fs-5">Cell {{ cell.index }}</dt>
+                            <dd>
+                                <div class="progress">
+                                    <div class="progress-bar {{ cell.class }}" role="progressbar" style="width: {{ cell.percentage }}%;" aria-valuenow="cell.volts" aria-valuemin="0" aria-valuemax="3.5">
+                                        <span class="progress-text fs-6 fw-bolder">{{ cell.volts }}v</span>
+                                    </div>
+                                </div>
+                            </dd>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                <div class="col-6">
+                    {% if device.cell_voltages %}
+                        {% for cell in device.cell_voltages_b %}
+                            <dt class="fs-5">Cell {{ cell.index }}</dt>
+                            <dd>
+                                <div class="progress">
+                                    <div class="progress-bar {{ cell.class }}" role="progressbar" style="width: {{ cell.percentage }}%;" aria-valuenow="cell.volts" aria-valuemin="0" aria-valuemax="3.5">
+                                        <span class="progress-text fs-6 fw-bolder">{{ cell.volts }}v</span>
+                                    </div>
+                                </div>
+                            </dd>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+        </dl>
+    </div>
+    <hr class="border border-3">
+    <div class="col-md-6">
+        <h3>Temp Sensors</h3>
+        <dl>
+            <div class="row">
+                {% for temp in device.temp_sensors %}
+                    <div class="col-6">
+                        <dt class="fs-5">Temp {{ temp.index }}</dt>
+                        <dd>
+                            <div class="progress">
+                                <div class="progress-bar {{ temp.class }}" role="progressbar" style="width: {{ temp.percentage }}%;" aria-valuenow="{{ temp.temp }}" aria-valuemin="0" aria-valuemax="3.5">
+                                    <span class="progress-text fs-6 fw-bolder">{{ temp.temp }}c</span>
+                                </div>
+                            </div>
+                        </dd>
+                    </div>
+                {% endfor %}
+            </div>
+        </dl>
+    </div>
+</div>

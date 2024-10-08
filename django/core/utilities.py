@@ -1,4 +1,5 @@
 def prepare_bms_data_context(data: dict):
+    data["id"] = data.get("address", "").replace(":", "")
     if not data.get("current"):
         data["current"] = "Unknown"
         data["current_class"] = "bg-secondary"
