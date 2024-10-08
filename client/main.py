@@ -24,6 +24,8 @@ class BMSHandler:
         self.bms_data_error = False
         self.polling_interval = 60
         self.all_data = {}
+        self.devices = []
+        self.devices_data = []
 
     def restart_bluetooth(self):
         logging.info("Restarting Bluetooth service...")
@@ -62,11 +64,6 @@ class BMSHandler:
                     self.print_bms_data_received(self.bms_data_received)
                     sorted_data = {k: self.all_data[k] for k in sorted(self.all_data)}
                     logging.info(json.dumps(sorted_data, indent=4))
-                    self.polling_interval = post_data(sorted_data)
-                    logging.info(
-                        f"Polling interval set to {self.polling_interval} seconds"
-                    )
-                    time.sleep(self.polling_interval)
                     # Reset the state
                     self.bms_data_received = []
                     self.bms_data_length_received = 0
@@ -182,72 +179,96 @@ class BMSHandler:
     async def scan_and_connect(self):
         logging.info("Scanning for devices...")
         devices = await BleakScanner.discover()
-        target_device = None
 
         for device in devices:
             if "xiaoxi" in device.name.lower():
-                target_device = device
+                self.devices.append(device)
 
-        if not target_device:
+        if not self.devices:
             logging.warning("No BMS devices found.")
             return None
 
-        logging.info(f"Found BMS device(s): {target_device.name}")
-
-        return target_device
+        logging.info(
+            f"Found BMS device(s): {', '.join([d.name for d in self.devices])}"
+        )
 
     async def main(self):
-        target_device = await self.scan_and_connect()
-        if not target_device:
+        await self.scan_and_connect()
+        if not self.devices:
             return
 
-        async with BleakClient(target_device) as client:
-            try:
-                if not client.is_connected:
-                    logging.error("Failed to connect to the device.")
-                    return
+        while True:
+            for target_device in self.devices:
+                self.all_data["name"] = target_device.name
+                self.all_data["address"] = target_device.address
 
-                logging.info("Connected to the BMS device")
-                await client.start_notify(BMS_RX_CHAR_UUID, self.handle_notification)
+                async with BleakClient(target_device.address) as client:
+                    try:
+                        if not client.is_connected:
+                            logging.error("Failed to connect to the device.")
+                            return
 
-                ticker = 1
-                while True:
-                    logging.info(f"Tick {ticker:03d}: ")
-                    if client.is_connected:
-                        if ticker % 3 == 0:
-                            logging.info(
-                                "bms connected, sending request for start voltage"
-                            )
-                            data = bytes(
-                                [
-                                    0xDD,
-                                    0xA5,
-                                    0x03,
-                                    0x00,
-                                    0xFF,
-                                    START_VOLTAGE_REGISTER,
-                                    0x77,
-                                ]
-                            )
-                        elif ticker % 2 == 0:
-                            logging.info(
-                                "bms connected, sending request for overall data"
-                            )
-                            data = bytes([0xDD, 0xA5, 0x03, 0x00, 0xFF, 0xFD, 0x77])
-                        else:
-                            logging.info("bms connected, sending request for cell data")
-                            data = bytes([0xDD, 0xA5, 0x04, 0x00, 0xFF, 0xFC, 0x77])
+                        logging.info("Connected to the BMS device")
+                        await client.start_notify(
+                            BMS_RX_CHAR_UUID, self.handle_notification
+                        )
 
-                        await client.write_gatt_char(BMS_TX_CHAR_UUID, data)
-                    else:
-                        logging.warning("Device disconnected")
-                        break
+                        ticker = 1
+                        while ticker < 10:
+                            logging.info(f"Tick {ticker:03d}: ")
+                            if client.is_connected:
+                                if ticker % 3 == 0:
+                                    logging.info(
+                                        "bms connected, sending request for start voltage"
+                                    )
+                                    data = bytes(
+                                        [
+                                            0xDD,
+                                            0xA5,
+                                            0x03,
+                                            0x00,
+                                            0xFF,
+                                            START_VOLTAGE_REGISTER,
+                                            0x77,
+                                        ]
+                                    )
+                                elif ticker % 2 == 0:
+                                    logging.info(
+                                        "bms connected, sending request for overall data"
+                                    )
+                                    data = bytes(
+                                        [0xDD, 0xA5, 0x03, 0x00, 0xFF, 0xFD, 0x77]
+                                    )
+                                else:
+                                    logging.info(
+                                        "bms connected, sending request for cell data"
+                                    )
+                                    data = bytes(
+                                        [0xDD, 0xA5, 0x04, 0x00, 0xFF, 0xFC, 0x77]
+                                    )
 
-                    ticker += 1
-                    await asyncio.sleep(5)
+                                await client.write_gatt_char(BMS_TX_CHAR_UUID, data)
+                            else:
+                                logging.warning("Device disconnected")
+                                break
 
-            except BleakError as e:
-                logging.error(f"An error occurred: {e}")
+                            ticker += 1
+                            await asyncio.sleep(5)
+
+                        # disconnect from the device
+                        await client.stop_notify(BMS_RX_CHAR_UUID)
+                        await client.disconnect()
+
+                    except BleakError as e:
+                        logging.error(f"An error occurred: {e}")
+
+                self.devices_data.append(self.all_data)
+                self.all_data = {}
+
+            self.polling_interval = post_data({"devices": self.devices_data})
+            self.devices_data = []
+            logging.info(f"Polling interval set to {self.polling_interval} seconds")
+            time.sleep(self.polling_interval)
 
 
 def get_token():
