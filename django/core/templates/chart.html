@@ -5,27 +5,37 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"
     integrity="sha512-CQBWl4fJHWbryGE+Pc7UAxWMUMNMWzWxF4SQo9CgkJIN1kx6djDQZjh3Y8SZ1d+6I+1zze6Z7kHXO7q3UyZAWw=="
     crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"
+    integrity="sha512-UXumZrZNiOwnTcZSHLOfcTs0aos2MzBWHXOHOuB0J/R44QB0dwY5JgfbvljXcklVf65Gc4El6RjZ+lnwd2az2g=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script
     src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/2.0.1/chartjs-plugin-zoom.min.js"
+    integrity="sha512-wUYbRPLV5zs6IqvWd88HIqZU/b8TBx+I8LEioQ/UC0t5EMCLApqhIAnUg7EsAzdbhhdgW07TqYDdH3QEXRcPOQ=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
 
-    
 <div>
     <a class="btn btn-primary btn-sm" href="{% url 'dashboard' bms_device_pk=bms_device_pk %}">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-90deg-left" viewBox="0 0 16 16">
-            <path fill-rule="evenodd" d="M1.146 4.854a.5.5 0 0 1 0-.708l4-4a.5.5 0 1 1 .708.708L2.707 4H12.5A2.5 2.5 0 0 1 15 6.5v8a.5.5 0 0 1-1 0v-8A1.5 1.5 0 0 0 12.5 5H2.707l3.147 3.146a.5.5 0 1 1-.708.708z"/>
-          </svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+            class="bi bi-arrow-90deg-left" viewBox="0 0 16 16">
+            <path fill-rule="evenodd"
+                d="M1.146 4.854a.5.5 0 0 1 0-.708l4-4a.5.5 0 1 1 .708.708L2.707 4H12.5A2.5 2.5 0 0 1 15 6.5v8a.5.5 0 0 1-1 0v-8A1.5 1.5 0 0 0 12.5 5H2.707l3.147 3.146a.5.5 0 1 1-.708.708z" />
+        </svg>
         Dashboard
     </a>
     <div class="container my-4">
         <canvas id="currentChart"></canvas>
     </div>
-    
+    <hr>
     <div class="container my-4">
         <canvas id="voltageChart"></canvas>
     </div>
+    <hr>
+    <div class="container my-4">
+        <canvas id="voltageDiffChart"></canvas>
+    </div>
 </div>
-
 
 <script type="json" id="bms-data">
 {{ data|safe }}
@@ -59,7 +69,6 @@
     }));
 
     const ctxCurrent = document.getElementById('currentChart').getContext('2d');
-
     const currentChart = new Chart(ctxCurrent, {
         type: 'line',
         data: {
@@ -75,19 +84,26 @@
                     },
                     title: {
                         display: true,
-                        text: 'Time of Day'
+                        text: 'Time of Day',
+                        color: '#c5c5c5'
                     }
                 },
                 y: {
                     title: {
                         display: true,
-                        text: 'Current (A)'
+                        text: 'Current (A)',
+                        color: '#c5c5c5'
                     }
                 }
             },
             plugins: {
+                title: {
+                    display: true,
+                    text: 'Current Over Time',
+                    color: 'white'
+                },
                 legend: {
-                    display: true
+                    display: true,
                 },
                 tooltip: {
                     mode: 'index',
@@ -95,12 +111,17 @@
                 },
                 zoom: {
                     zoom: {
-                        enabled: true,
-                        mode: 'x'
+                        wheel: {
+                            enabled: true
+                        },
+                        pinch: {
+                            enabled: true
+                        },
+                        mode: 'x',
                     },
                     pan: {
                         enabled: true,
-                        mode: 'x'
+                        mode: 'x',
                     }
                 }
             }
@@ -122,7 +143,6 @@
     }));
 
     const ctxVoltage = document.getElementById('voltageChart').getContext('2d');
-
     const voltageChart = new Chart(ctxVoltage, {
         type: 'line',
         data: {
@@ -138,17 +158,24 @@
                     },
                     title: {
                         display: true,
-                        text: 'Time of Day'
+                        text: 'Time of Day',
+                        color: '#c5c5c5'
                     }
                 },
                 y: {
                     title: {
                         display: true,
-                        text: 'Total Voltage (V)'
+                        text: 'Total Voltage (V)',
+                        color: '#c5c5c5'
                     }
                 }
             },
             plugins: {
+                title: {
+                    display: true,
+                    text: 'Total Voltage Over Time',
+                    color: 'white'
+                },
                 legend: {
                     display: true
                 },
@@ -158,12 +185,100 @@
                 },
                 zoom: {
                     zoom: {
-                        enabled: true,
+                        wheel: {
+                            enabled: true
+                        },
+                        pinch: {
+                            enabled: true
+                        },
                         mode: 'x'
                     },
                     pan: {
                         enabled: true,
+                        mode: 'x',
+                    }
+                }
+            }
+        }
+    });
+
+    // Datasets for voltage difference
+    const voltageDiffDatasets = deviceNames.map((deviceName, index) => ({
+        label: `${deviceName} Voltage Difference`,
+        data: data.map(entry => {
+            const device = entry.data.devices.find(d => d.name === deviceName);
+            if (device && device.cell_voltages) {
+                const voltages = device.cell_voltages.map(v => parseFloat(v));
+                const diff = Math.max(...voltages) - Math.min(...voltages);
+                return {
+                    x: new Date(entry.date),
+                    y: diff
+                };
+            } else {
+                return {
+                    x: new Date(entry.date),
+                    y: null
+                };
+            }
+        }),
+        borderColor: colors[index],
+        tension: 0.1
+    }));
+
+    const ctxVoltageDiff = document.getElementById('voltageDiffChart').getContext('2d');
+    const voltageDiffChart = new Chart(ctxVoltageDiff, {
+        type: 'line',
+        data: {
+            datasets: voltageDiffDatasets
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: {
+                    type: 'time',
+                    time: {
+                        unit: 'hour'
+                    },
+                    title: {
+                        display: true,
+                        text: 'Time of Day',
+                        color: '#c5c5c5'
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Voltage Difference (V)',
+                        color: '#c5c5c5'
+                    }
+                }
+            },
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Voltage Difference Over Time',
+                    color: 'white'
+                },
+                legend: {
+                    display: true
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false
+                },
+                zoom: {
+                    zoom: {
+                        wheel: {
+                            enabled: true
+                        },
+                        pinch: {
+                            enabled: true
+                        },
                         mode: 'x'
+                    },
+                    pan: {
+                        enabled: true,
+                        mode: 'x',
                     }
                 }
             }
