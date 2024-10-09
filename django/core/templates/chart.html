@@ -24,15 +24,15 @@
         </svg>
         Dashboard
     </a>
-    <div class="container my-4">
+    <div class="container my-4" style="min-height: 50vh;">
         <canvas id="currentChart"></canvas>
     </div>
     <hr>
-    <div class="container my-4">
+    <div class="container my-4" style="min-height: 50vh;">
         <canvas id="voltageChart"></canvas>
     </div>
     <hr>
-    <div class="container my-4">
+    <div class="container my-4" style="min-height: 50vh;">
         <canvas id="voltageDiffChart"></canvas>
     </div>
 </div>
@@ -75,6 +75,7 @@
             datasets: currentDatasets
         },
         options: {
+            maintainAspectRatio: false,
             responsive: true,
             scales: {
                 x: {
@@ -149,6 +150,7 @@
             datasets: voltageDatasets
         },
         options: {
+            maintainAspectRatio: false,
             responsive: true,
             scales: {
                 x: {
@@ -232,6 +234,7 @@
             datasets: voltageDiffDatasets
         },
         options: {
+            maintainAspectRatio: false,
             responsive: true,
             scales: {
                 x: {
