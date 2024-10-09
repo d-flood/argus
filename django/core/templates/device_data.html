@@ -27,11 +27,13 @@
                 </dd>
             {% endif %}
             <hr>
+            Balance Diff {{ device.cell_voltages_diff}}
+
             <div class="row">
                 <div class="col-6">
                     {% if device.cell_voltages %}
                         {% for cell in device.cell_voltages_a %}
-                            <dt class="fs-5">Cell {{ cell.index }}</dt>
+                            <dt class="fs-5{% if cell.label_class %} {{ cell.label_class }}{% endif %}">Cell {{ cell.index }}</dt>
                             <dd>
                                 <div class="progress">
                                     <div class="progress-bar {{ cell.class }}" role="progressbar" style="width: {{ cell.percentage }}%;" aria-valuenow="cell.volts" aria-valuemin="0" aria-valuemax="3.5">
@@ -45,7 +47,7 @@
                 <div class="col-6">
                     {% if device.cell_voltages %}
                         {% for cell in device.cell_voltages_b %}
-                            <dt class="fs-5">Cell {{ cell.index }}</dt>
+                            <dt class="fs-5{% if cell.label_class %} {{ cell.label_class }}{% endif %}">Cell {{ cell.index }}</dt>
                             <dd>
                                 <div class="progress">
                                     <div class="progress-bar {{ cell.class }}" role="progressbar" style="width: {{ cell.percentage }}%;" aria-valuenow="cell.volts" aria-valuemin="0" aria-valuemax="3.5">

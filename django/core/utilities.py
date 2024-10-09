@@ -37,6 +37,11 @@ def prepare_bms_data_context(data: dict):
         data["cell_voltages"] = None
     else:
         cells = []
+        # get the difference between the highest and lowest cell voltage
+        data["cell_voltages"] = [float(v) for v in data["cell_voltages"]]
+        sorted_voltages = sorted(data["cell_voltages"])
+        data["cell_voltages_diff"] = round(sorted_voltages[-1] - sorted_voltages[0], 3)
+
         for i, v in enumerate(data["cell_voltages"], 1):
             volts = float(v)
             percentage = (volts / 3.5) * 100
@@ -46,12 +51,21 @@ def prepare_bms_data_context(data: dict):
                 cell_class = "bg-warning"
             else:
                 cell_class = "bg-danger"
+
+            if float(v) == sorted_voltages[0]:
+                label_class = "text-primary"
+            elif float(v) == sorted_voltages[-1]:
+                label_class = "text-info"
+            else:
+                label_class = None
+
             cells.append(
                 {
                     "volts": volts,
                     "percentage": round(percentage, 2),
                     "class": cell_class,
                     "index": i,
+                    "label_class": label_class,
                 }
             )
         data["cell_voltages_a"] = cells[:4]
