@@ -1,5 +1,7 @@
 import json
+from datetime import timedelta
 
+from django.utils import timezone
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.csrf import csrf_exempt
@@ -19,12 +21,26 @@ def home(request: HttpRequest) -> HttpResponse:
 @require_safe
 def dashboard(request: HttpRequest, bms_device_pk: int) -> HttpResponse:
     bms = get_object_or_404(models.BMSDevice, pk=bms_device_pk)
-    bms_data = bms.datasets.first()
+    which = int(request.GET.get("which", 0))
+    try:
+        which = int(which)
+    except ValueError:
+        which = 0
+    if which == 0:
+        bms_data = bms.datasets.first()
+    else:
+        bms_data = bms.datasets.all()[which]
     devices = [
         prepare_bms_data_context(device) for device in bms_data.data.get("devices", [])
     ]
     devices = sorted(devices, key=lambda x: x["address"])
-    context = {"devices": devices, "bms": bms, "date": bms_data.date}
+    context = {
+        "devices": devices,
+        "bms": bms,
+        "date": bms_data.date,
+        "newer": which - 1 if which > 0 else None,
+        "older": which + 1 if which < bms.datasets.count() - 1 else None,
+    }
     return render(request, "dashboard.html", context)
 
 
@@ -55,8 +71,9 @@ def bms_data(request: HttpRequest) -> HttpResponse:
 @require_safe
 @login_required
 def chart(request: HttpRequest, bms_device_pk: int) -> HttpResponse:
+    five_days_ago = timezone.now() - timedelta(days=5)
     datasets = models.Dataset.objects.filter(
-        created_by=request.user, bms__pk=bms_device_pk
+        created_by=request.user, bms__pk=bms_device_pk, date__gte=five_days_ago
     )
     context = {
         "data": serialize_datasets(datasets),

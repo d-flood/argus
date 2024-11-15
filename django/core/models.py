@@ -11,6 +11,7 @@ class BMSDevice(models.Model):
     polling_interval = models.IntegerField(
         default=60, help_text="Minutes between data collection"
     )
+    datasets: models.QuerySet["Dataset"]
 
     class Meta:
         verbose_name = "BMS Devices"

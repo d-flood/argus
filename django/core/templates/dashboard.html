@@ -6,13 +6,33 @@
     <h1 class="text-center">Dashboard</h1>
     <article>
         <h2 class="text-center">{{ bms.name }}</h2>
-        <p class="text-center">
+        <p class="text-center my-0">
             Last Updated: {{ date|localtime }} US CT ({{ date|timesince }} ago)
             <a href="{% url 'chart' bms_device_pk=bms.pk %}" title="Data History" aria-label="Data History" class="btn btn-primary btn-sm">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M0 0h1v15h15v1H0zm14.817 3.113a.5.5 0 0 1 .07.704l-4.5 5.5a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61 4.15-5.073a.5.5 0 0 1 .704-.07"/></svg>
             </a>
         </p>
-
+        <div class="d-flex justify-content-between align-items-center my-0">
+            <a href="{% url 'dashboard' bms_device_pk=bms.pk %}?which={{ older }}" 
+                class="btn btn-secondary btn-sm{% if not older %} disabled{% endif %}"
+                title="Older">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-chevron-double-left" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M8.354 1.646a.5.5 0 0 1 0 .708L2.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0"/>
+                    <path fill-rule="evenodd" d="M12.354 1.646a.5.5 0 0 1 0 .708L6.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0"/>
+                </svg>
+            </a>
+            <a href="{% url 'dashboard' bms_device_pk=bms.pk %}?which=0" class="btn btn-secondary btn-sm">
+                Newest
+            </a>
+            <a href="{% url 'dashboard' bms_device_pk=bms.pk %}?which={{ newer }}" 
+                class="btn btn-secondary btn-sm{% if not newer %} disabled{% endif %}"
+                title="Newer">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-chevron-double-right" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M3.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L9.293 8 3.646 2.354a.5.5 0 0 1 0-.708"/>
+                    <path fill-rule="evenodd" d="M7.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L13.293 8 7.646 2.354a.5.5 0 0 1 0-.708"/>
+                </svg>
+            </a>
+        </div>
         <ul class="nav nav-tabs" role="tablist">
             {% for device in devices %}
                 <li class="nav-item" role="presentation">
