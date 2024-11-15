@@ -1,0 +1,12 @@
+[Unit]
+Description=Argus client service
+After=network.target
+
+[Service]
+WorkingDirectory=/home/flood/argus
+ExecStart=/home/flood/argus/.venv/bin/python3 /home/flood/argus/main.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
